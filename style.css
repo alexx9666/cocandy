@@ -1,0 +1,25 @@
+body {
+    background-color: #f8f9fa; /* Light grey background */
+    font-family: 'Roboto', sans-serif;
+}
+.header-bar {
+    background-color: #007bff; /* Primary Blue */
+    color: white;
+    padding: 15px 0;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+.card-custom {
+    margin-top: 20px;
+    border-left: 5px solid #007bff;
+}
+.data-table-container {
+    max-height: 500px;
+    overflow-y: auto;
+}
+.search-input {
+    max-width: 400px;
+}
+.form-label {
+    font-weight: 600;
+    color: #007bff;
+}
