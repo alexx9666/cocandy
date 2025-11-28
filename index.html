@@ -1,488 +1,187 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>मीटर प्रबंधन सिस्टम - Excel ऑटोमेशन</title>
-    <h1></h1>
-    <!-- Basic CSS for styling -->
-    <style>
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            margin: 20px;
-            background-color: #f4f7f6;
-            color: #333;
-        }
-        .container {
-            max-width: 1200px;
-            margin: auto;
-            background-color: #ffffff;
-            padding: 30px;
-            border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-        }
-        h1, h2 {
-            color: #0056b3;
-            border-bottom: 2px solid #e0e0e0;
-            padding-bottom: 10px;
-            margin-top: 30px;
-        }
-        .file-upload-section {
-            margin-bottom: 25px;
-            padding: 15px;
-            border: 1px dashed #c0d8f0;
-            border-radius: 5px;
-            background-color: #eaf3ff;
-        }
-        input[type="file"] {
-            display: block;
-            margin-bottom: 15px;
-            padding: 8px;
-            border: 1px solid #c0d8f0;
-            border-radius: 4px;
-            background-color: #fff;
-        }
-        button {
-            padding: 10px 20px;
-            margin-right: 15px;
-            background-color: #007bff;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 16px;
-            transition: background-color 0.2s ease-in-out;
-        }
-        button:hover:not(:disabled) {
-            background-color: #0056b3;
-        }
-        button:disabled {
-            background-color: #cccccc;
-            cursor: not-allowed;
-        }
-        .search-box {
-            margin-bottom: 20px;
-            padding: 10px;
-            border: 1px solid #c0d8f0;
-            border-radius: 5px;
-            background-color: #f8fcfd;
-        }
-        .search-box input[type="text"] {
-            width: calc(100% - 22px);
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            font-size: 16px;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 25px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-        }
-        th, td {
-            border: 1px solid #e0e0e0;
-            padding: 12px 15px;
-            text-align: left;
-            font-size: 14px;
-        }
-        th {
-            background-color: #f8f8f8;
-            font-weight: bold;
-            color: #555;
-            position: sticky; /* For sticky header */
-            top: 0;
-            z-index: 1;
-        }
-        tbody tr:nth-child(even) {
-            background-color: #fdfdfd;
-        }
-        tbody tr:hover {
-            background-color: #f0f8ff;
-        }
-        .highlighted-row {
-            background-color: #fffacd !important; /* Lemon Chiffon - हल्का पीला */
-            transition: background-color 0.3s ease;
-        }
-        .scrollable-table {
-            max-height: 600px; /* Adjust as needed */
-            overflow-y: auto;
-            border: 1px solid #e0e0e0;
-            border-radius: 5px;
-        }
-        #message {
-            margin-top: 20px;
-            padding: 10px;
-            border-radius: 5px;
-            background-color: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
-            display: none; /* Hide by default */
-        }
-        .warning {
-            background-color: #fff3cd;
-            color: #856404;
-            border-color: #ffeeba;
-        }
-        .error {
-            background-color: #f8d7da;
-            color: #721c24;
-            border-color: #f5c6cb;
-        }
-    </style>
+  <title>Smart Meter Data Manager - Standalone</title>
+  <!-- Bootstrap 5 CDN -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Separate CSS file -->
+  <link href="style.css" rel="stylesheet">
 </head>
 <body>
+
+<!-- 1. HEADER & SEARCH BAR -->
+<div class="header-bar text-center">
     <div class="container">
-        <h1>स्मार्ट मीटर प्रबंधन सिस्टम</h1>
-        <p>यहां आप अपने मीटर इंस्टॉलेशन के रिकॉर्ड को कुशलता से प्रबंधित कर सकते हैं।</p>
+        <h1>Smart Meter Data Manager</h1>
+        <p class="lead">स्टैंडअलोन वेब ऐप (Google Sheets API)</p>
+        <input type="text" id="searchInput" onkeyup="filterTable()" class="form-control search-input mx-auto mt-3" 
+               placeholder="Account No., Old Meter No., New Meter No., या Box No. से खोजें...">
+    </div>
+</div>
 
-        <div class="file-upload-section">
-            <h2>फाइलें अपलोड करें</h2>
-            <p>अपनी मास्टर BI Excel फ़ाइल अपलोड करें (जैसे "Master BI Data.xlsx"):</p>
-            <input type="file" id="masterFileInput" accept=".xlsx, .xls">
-
-            <p>जमा किए गए मीटर के लिए खाली/मौजूदा Excel फ़ाइल अपलोड करें (वैकल्पिक, हेडर और मौजूदा डाटा के लिए):</p>
-            <input type="file" id="submittedFileInput" accept=".xlsx, .xls">
-
-            <button id="processFilesButton" disabled>फ़ाइलें प्रोसेस करें और डाटा दिखाएं</button>
-        </div>
-
-        <div id="message" style="display: none;"></div>
-
-        <h2>मास्टर BI डाटा</h2>
-        <div class="search-box">
-            <input type="text" id="searchInput" placeholder="अकाउंट नंबर, मीटर नंबर, नाम आदि से खोजें..." disabled>
-        </div>
+<div class="container mt-4">
+    <div class="row">
         
-        <div class="scrollable-table">
-            <div id="masterTableContainer">
-                <p>यहां मास्टर BI डाटा प्रदर्शित होगा। कृपया फाइलें अपलोड करें और 'प्रोसेस' बटन पर क्लिक करें।</p>
+        <!-- 2. NEW ENTRY FORM -->
+        <div class="col-md-4">
+            <div class="card card-custom">
+                <div class="card-header bg-primary text-white">नया मीटर डेटा जोड़ें</div>
+                <div class="card-body">
+                    <form id="meterDataForm"> 
+                        <h6 class="text-secondary mb-3">Consumer Details</h6>
+                        <div class="mb-3">
+                            <label for="consumerAccountNo" class="form-label">Consumer Account No. <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="consumerAccountNo" name="consumerAccountNo" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="oldMeterNo" class="form-label">Old Meter No. / New Meter No.</label>
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="oldMeterNo" name="oldMeterNo" placeholder="Old Meter">
+                                <input type="text" class="form-control" id="newMeterNo" name="newMeterNo" placeholder="New Meter">
+                            </div>
+                        </div>
+
+                        <h6 class="text-secondary mb-3 mt-4">Readings</h6>
+                        <div class="mb-3">
+                            <label for="cumKWHReading" class="form-label">Cum KWH Reading</label>
+                            <input type="number" class="form-control" id="cumKWHReading" name="cumKWHReading">
+                        </div>
+                        <div class="mb-3">
+                            <label for="kwhMDReading" class="form-label">KWH MD Reading</label>
+                            <input type="number" class="form-control" id="kwhMDReading" name="kwhMDReading">
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="boxNo" class="form-label">Box No. / Sealing No.</label>
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="boxNo" name="boxNo" placeholder="Box No.">
+                                <input type="text" class="form-control" id="sealingNo" name="sealingNo" placeholder="Sealing No.">
+                            </div>
+                        </div>
+                        
+                        <h6 class="text-secondary mb-3 mt-4">Images (Click Photo/Upload)</h6>
+                        <div class="mb-3">
+                            <label for="mdImage" class="form-label">KWH MD Image</label>
+                            <input type="file" class="form-control mb-2" id="mdImage" name="mdImage" accept="image/*" capture="camera">
+                        </div>
+                        <div class="mb-3">
+                            <label for="cumKWHImage" class="form-label">Cum KWH Image</label>
+                            <input type="file" class="form-control mb-2" id="cumKWHImage" name="cumKWHImage" accept="image/*" capture="camera">
+                        </div>
+                        <div class="mb-3">
+                            <label for="sealingImage" class="form-label">Sealing Image</label>
+                            <input type="file" class="form-control" id="sealingImage" name="sealingImage" accept="image/*" capture="camera">
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="remarks" class="form-label">Remarks</label>
+                            <textarea class="form-control" id="remarks" name="remarks" rows="2"></textarea>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-success w-100 mt-3">डेटा अपलोड करें</button>
+                    </form>
+                    <div id="statusMessage" class="mt-3 text-center"></div>
+                </div>
             </div>
         </div>
 
-        <hr style="margin-top: 40px; border-color: #e0e0e0;">
-
-        <h2>कार्य:</h2>
-        <button id="downloadMasterButton" disabled>अपडेटेड मास्टर BI डाउनलोड करें</button>
-        <button id="downloadSubmittedButton" disabled>जमा किए गए मीटर डाउनलोड करें</button>
+        <!-- 3. DATA DISPLAY TABLE -->
+        <div class="col-md-8">
+            <div class="card card-custom">
+                <div class="card-header bg-secondary text-white">अपलोड किया गया डेटा (एडिट/देखें)</div>
+                <div class="card-body data-table-container">
+                    <table class="table table-sm table-striped table-hover">
+                        <thead>
+                            <tr>
+                                <th>Account No.</th>
+                                <th>New Meter No.</th>
+                                <th>Reading (KWH)</th>
+                                <th>Date</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="dataTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
     </div>
-    <h1 style="color:Design by Alexx;">Design by Alexx</h1>
+</div>
 
-    <!-- SheetJS Library for Excel operations -->
-    <script src="https://unpkg.com/xlsx/dist/xlsx.full.min.js"></script>
-
-    <script>
-        // Global variables to store workbook and data
-        let masterWorkbook = null;
-        let submittedWorkbook = null;
-        let masterSheetName = '';
-        let submittedSheetName = 'Submitted Meters'; // Default name for the new sheet
-        let masterHeaders = []; // To store headers of the master sheet
-        let masterData = [];    // Array to hold parsed master data (including a 'isSubmitted' flag)
-        let submittedData = []; // Array to hold data for submitted meters
-
-        // DOM elements
-        const masterFileInput = document.getElementById('masterFileInput');
-        const submittedFileInput = document.getElementById('submittedFileInput');
-        const processFilesButton = document.getElementById('processFilesButton');
-        const masterTableContainer = document.getElementById('masterTableContainer');
-        const downloadMasterButton = document.getElementById('downloadMasterButton');
-        const downloadSubmittedButton = document.getElementById('downloadSubmittedButton');
-        const messageDiv = document.getElementById('message');
-        const searchInput = document.getElementById('searchInput'); // New search input
-
-        // --- Utility Functions ---
-        function showMessage(msg, type = 'info') {
-            messageDiv.textContent = msg;
-            messageDiv.className = ''; // Clear previous classes
-            messageDiv.classList.add(type);
-            messageDiv.style.display = 'block';
-            setTimeout(() => {
-                messageDiv.style.display = 'none';
-            }, 5000); // Hide after 5 seconds
-        }
-
-        function checkFiles() {
-            processFilesButton.disabled = masterFileInput.files.length === 0;
-        }
-
-        // --- Event Listeners ---
-        masterFileInput.addEventListener('change', checkFiles);
-        submittedFileInput.addEventListener('change', checkFiles);
-
-        processFilesButton.addEventListener('click', async () => {
-            if (masterFileInput.files.length === 0) {
-                showMessage('कृपया मास्टर BI फ़ाइल चुनें।', 'error');
-                return;
-            }
-
-            processFilesButton.disabled = true; // Disable button while processing
-            searchInput.disabled = true; // Disable search while processing
-            showMessage('फाइलें प्रोसेस की जा रही हैं, कृपया प्रतीक्षा करें...', 'info');
-
-            // --- Read Master File ---
-            const masterFile = masterFileInput.files[0];
-            const masterReader = new FileReader();
-
-            masterReader.onload = async (e) => {
-                try {
-                    const data = new Uint8Array(e.target.result);
-                    masterWorkbook = XLSX.read(data, { type: 'array' });
-                    masterSheetName = masterWorkbook.SheetNames[0]; // Assuming data is in the first sheet
-                    
-                    const worksheet = masterWorkbook.Sheets[masterSheetName];
-
-                    // Option 1: Try to find the header row by looking for 'S.No.' or 'Consumer Account No'
-                    // This is a heuristic and might need adjustment based on your exact file.
-                    let headerRowIndex = -1;
-                    const range = XLSX.utils.decode_range(worksheet['!ref']);
-                    for (let R = range.s.r; R <= range.e.r; ++R) {
-                        const cellAddress = XLSX.utils.encode_cell({ r: R, c: range.s.c }); // First cell of the row
-                        const cellValue = worksheet[cellAddress] ? String(worksheet[cellAddress].v).trim() : '';
-                        
-                        // Check if it looks like a header row (e.g., starts with S.No. or Consumer Account No)
-                        if (cellValue.toLowerCase() === 's.no.' || cellValue.toLowerCase() === 'replacement date' || cellValue.toLowerCase() === 'consumer account no') {
-                            headerRowIndex = R;
-                            break;
-                        }
-                    }
-
-                    if (headerRowIndex === -1) {
-                        // If no clear header row found by heuristic, assume it's the first row
-                        headerRowIndex = 0; 
-                        showMessage('हेडर रो स्वचालित रूप से नहीं मिली; पहली रो को हेडर माना जा रहा है।', 'warning');
-                    } else {
-                        showMessage(`हेडर रो रो नंबर ${headerRowIndex + 1} पर मिली।`, 'info');
-                    }
-                    
-                    // Convert sheet to JSON, skipping rows before the identified headerRowIndex
-                    // This is the key change to ensure correct data parsing
-                    masterData = XLSX.utils.sheet_to_json(worksheet, {
-                        range: headerRowIndex, // Start parsing from the header row
-                        raw: false // Ensures formatted values are read
-                    });
-                    
-                    if (masterData.length > 0) {
-                        masterHeaders = Object.keys(masterData[0]); // Get headers from the first parsed object
-                        
-                        // Clean up headers: remove null/undefined and trim whitespace
-                        masterHeaders = masterHeaders.filter(h => h !== undefined && h !== null).map(h => String(h).trim());
-
-                        masterData = masterData.map((row, index) => {
-                            let obj = {};
-                            masterHeaders.forEach(header => {
-                                // Use the cleaned header to access the row data
-                                obj[header] = row[header] === undefined ? '' : row[header]; 
-                            });
-                            obj.internal_rowIndex = index; 
-                            obj.isSubmitted = false;      
-                            return obj;
-                        });
-                    } else {
-                        masterData = [];
-                        masterHeaders = [];
-                        showMessage('मास्टर BI फ़ाइल में कोई डाटा नहीं मिला या हेडर नहीं मिले।', 'warning');
-                        processFilesButton.disabled = false;
-                        return;
-                    }
-
-                    // --- Read Submitted File (Optional) ---
-                    if (submittedFileInput.files.length > 0) {
-                        const submittedFile = submittedFileInput.files[0];
-                        const submittedReader = new FileReader();
-                        submittedReader.onload = (se) => {
-                            try {
-                                const submittedDataArray = new Uint8Array(se.target.result);
-                                submittedWorkbook = XLSX.read(submittedDataArray, { type: 'array' });
-                                submittedSheetName = submittedWorkbook.SheetNames[0] || submittedSheetName; 
-
-                                const submittedWorksheet = submittedWorkbook.Sheets[submittedSheetName];
-                                submittedData = XLSX.utils.sheet_to_json(submittedWorksheet, { raw: false });
-                                
-                                // Mark existing submitted items in masterData
-                                submittedData.forEach(sRow => {
-                                    const matchingMasterRow = masterData.find(mRow =>
-                                        // Robust matching based on your likely unique identifiers
-                                        // Adjust these column names as per your actual Excel headers
-                                        (mRow['Consumer Account No'] && mRow['Consumer Account No'] == sRow['Consumer Account No']) &&
-                                        (mRow['New Meter No'] && mRow['New Meter No'] == sRow['New Meter No'])
-                                        // You might need to adjust these column names based on your Excel file.
-                                        // Use '==' for loose equality to handle number/string comparisons.
-                                    );
-                                    if (matchingMasterRow) {
-                                        matchingMasterRow.isSubmitted = true;
-                                    }
-                                });
-                                showMessage('फाइलें सफलतापूर्वक प्रोसेस हो गईं।', 'info');
-                                displayMasterData(masterData); 
-                            } catch (error) {
-                                showMessage(`जमा की गई फ़ाइल को पढ़ने में त्रुटि: ${error.message}`, 'error');
-                                displayMasterData(masterData); 
-                            } finally {
-                                processFilesButton.disabled = false;
-                                searchInput.disabled = false;
-                                downloadMasterButton.disabled = false;
-                                downloadSubmittedButton.disabled = false;
-                            }
-                        };
-                        submittedReader.onerror = (se) => {
-                            showMessage(`जमा की गई फ़ाइल को पढ़ने में त्रुटि: ${se.target.error.message}`, 'error');
-                            processFilesButton.disabled = false;
-                            searchInput.disabled = false;
-                            downloadMasterButton.disabled = false;
-                            downloadSubmittedButton.disabled = false;
-                        };
-                        submittedReader.readAsArrayBuffer(submittedFile);
-                    } else {
-                        submittedData = [];
-                        showMessage('फाइलें सफलतापूर्वक प्रोसेस हो गईं।', 'info');
-                        displayMasterData(masterData); 
-                        processFilesButton.disabled = false;
-                        searchInput.disabled = false;
-                        downloadMasterButton.disabled = false;
-                        downloadSubmittedButton.disabled = false;
-                    }
-
-                } catch (error) {
-                    showMessage(`मास्टर BI फ़ाइल को प्रोसेस करने में त्रुटि: ${error.message}`, 'error');
-                    console.error("Master file processing error:", error); // Log detailed error
-                    processFilesButton.disabled = false;
-                }
-            };
-            masterReader.onerror = (e) => {
-                showMessage(`मास्टर BI फ़ाइल को पढ़ने में त्रुटि: ${e.target.error.message}`, 'error');
-                processFilesButton.disabled = false;
-            };
-            masterReader.readAsArrayBuffer(masterFile);
-        });
-
-        // Function to display data, now accepts dataToShow as argument
-        function displayMasterData(dataToShow) {
-            if (dataToShow.length === 0) {
-                masterTableContainer.innerHTML = '<p>कोई डाटा नहीं</p>';
-                return;
-            }
-
-            if (masterHeaders.length === 0) {
-                 masterTableContainer.innerHTML = '<p>मास्टर BI फ़ाइल में कोई हेडर नहीं मिला।</p>';
-                 return;
-            }
-
-
-            let tableHTML = '<table><thead><tr>';
-            masterHeaders.forEach(header => {
-                tableHTML += `<th>${header}</th>`;
-            });
-            tableHTML += '<th>जमा करें</th></tr></thead><tbody>';
-
-            dataToShow.forEach((row) => {
-                const isSubmitted = row.isSubmitted;
-                tableHTML += `<tr id="row-${row.internal_rowIndex}" class="${isSubmitted ? 'highlighted-row' : ''}">`;
-                masterHeaders.forEach(header => {
-                    tableHTML += `<td>${row[header] === undefined ? '' : row[header]}</td>`;
-                });
-                tableHTML += `<td><input type="checkbox" data-row-index="${row.internal_rowIndex}" ${isSubmitted ? 'checked disabled' : ''} onchange="toggleSubmission(${row.internal_rowIndex}, this.checked)"></td>`;
-                tableHTML += '</tr>';
-            });
-            tableHTML += '</tbody></table>';
-            masterTableContainer.innerHTML = tableHTML;
-        }
-
-        // This function needs to be globally accessible for onchange in HTML
-        window.toggleSubmission = function(internalRowIndex, isChecked) {
-            const rowElement = document.getElementById(`row-${internalRowIndex}`);
-            const masterRow = masterData.find(row => row.internal_rowIndex === internalRowIndex);
-
-            if (!masterRow) {
-                showMessage('त्रुटि: संबंधित रो डाटा में नहीं मिली।', 'error');
-                return;
-            }
-
-            if (isChecked) {
-                rowElement.classList.add('highlighted-row');
-                masterRow.isSubmitted = true; // Mark in masterData
-                
-                // Add to submittedData. Create a copy and remove internal flags before adding.
-                const { internal_rowIndex, isSubmitted, ...submittedRowCopy } = masterRow;
-                submittedData.push(submittedRowCopy);
-                
-                // Disable checkbox to prevent re-submission
-                rowElement.querySelector('input[type="checkbox"]').disabled = true;
-                showMessage(`मीटर "${masterRow[masterHeaders[0]] || ''}" जमा किए गए मीटर्स में जोड़ा गया।`, 'info'); // Show first header value
-            }
-        }
-
-        // --- Search Functionality ---
-        searchInput.addEventListener('keyup', () => {
-            const searchTerm = searchInput.value.toLowerCase();
-            const filteredData = masterData.filter(row => {
-                // Check all values in the row against the search term
-                return masterHeaders.some(header => {
-                    const cellValue = String(row[header]).toLowerCase();
-                    return cellValue.includes(searchTerm);
-                });
-            });
-            displayMasterData(filteredData); // Display only filtered data
-        });
-
-
-        downloadMasterButton.addEventListener('click', () => {
-            if (!masterWorkbook || masterData.length === 0) {
-                showMessage('कृपया पहले मास्टर BI फ़ाइल अपलोड और प्रोसेस करें।', 'warning');
-                return;
-            }
-
-            // Prepare data for export: remove internal_rowIndex and isSubmitted flag
-            const dataToExport = masterData.map(row => {
-                const newRow = { ...row };
-                delete newRow.internal_rowIndex;
-                delete newRow.isSubmitted;
-                return newRow;
-            });
-
-            const ws = XLSX.utils.json_to_sheet(dataToExport, { header: masterHeaders });
+<!-- EDIT MODAL -->
+<div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header bg-warning text-dark">
+        <h5 class="modal-title" id="editModalLabel">डेटा एडिट करें</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <form id="editDataForm">
+            <input type="hidden" id="editRowIndex" name="rowIndex">
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Consumer Account No.</label>
+                    <input type="text" class="form-control" id="editConsumerAccountNo" name="consumerAccountNo" required readonly>
+                </div>
+                 <div class="col-md-6 mb-3">
+                    <label class="form-label">Box No. / Sealing No.</label>
+                    <div class="input-group">
+                        <input type="text" class="form-control" id="editBoxNo" name="boxNo" placeholder="Box No.">
+                        <input type="text" class="form-control" id="editSealingNo" name="sealingNo" placeholder="Sealing No.">
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Old Meter No.</label>
+                    <input type="text" class="form-control" id="editOldMeterNo" name="oldMeterNo">
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">New Meter No.</label>
+                    <input type="text" class="form-control" id="editNewMeterNo" name="newMeterNo">
+                </div>
+            </div>
             
-            masterData.forEach((row, index) => {
-                if (row.isSubmitted) {
-                    // Excel row index is 'index + 1' for 0-indexed data arrays (skipping header row)
-                    masterHeaders.forEach((header, colIndex) => {
-                        const cellAddress = XLSX.utils.encode_cell({ r: index + 1, c: colIndex }); 
-                        if (ws[cellAddress]) {
-                            if (!ws[cellAddress].s) ws[cellAddress].s = {};
-                            ws[cellAddress].s.fill = { fgColor: { rgb: "FFFFFFAC" } }; // Light Yellow RGB
-                        }
-                    });
-                }
-            });
+            <hr>
+            <h6>Readings & Image Links</h6>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Cum KWH Reading</label>
+                    <input type="number" class="form-control" id="editCumKWHReading" name="cumKWHReading">
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">KWH MD Reading</label>
+                    <input type="number" class="form-control" id="editKwhMDReading" name="kwhMDReading">
+                </div>
+            </div>
 
-            const wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, ws, masterSheetName);
-            XLSX.writeFile(wb, 'Updated_Master_BI.xlsx');
-            showMessage('अपडेटेड मास्टर BI फ़ाइल डाउनलोड हो गई है!', 'info');
-        });
+            <div class="mb-3">
+                <label class="form-label">MD Image Link</label>
+                <input type="url" class="form-control" id="editMdImageLink" name="mdImageLink" placeholder="Paste Drive Link">
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Sealing Image Link</label>
+                <input type="url" class="form-control" id="editSealingImageLink" name="sealingImageLink" placeholder="Paste Drive Link">
+            </div>
 
-        downloadSubmittedButton.addEventListener('click', () => {
-            if (submittedData.length === 0) {
-                showMessage('कोई मीटर जमा नहीं किया गया है।', 'warning');
-                return;
-            }
+            <div class="mb-3">
+                <label class="form-label">Remarks</label>
+                <textarea class="form-control" id="editRemarks" name="remarks" rows="2"></textarea>
+            </div>
             
-            // Use masterHeaders to ensure correct order in submitted file
-            const dataToExport = submittedData.map(row => {
-                const newRow = {};
-                masterHeaders.forEach(header => {
-                    newRow[header] = row[header] === undefined ? '' : row[header];
-                });
-                return newRow;
-            });
+            <button type="submit" class="btn btn-warning w-100 mt-3">अपडेट सेव करें</button>
+            <div id="editStatusMessage" class="mt-3 text-center"></div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
 
-            const ws = XLSX.utils.json_to_sheet(dataToExport, { header: masterHeaders });
-            const wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, ws, submittedSheetName); 
-            XLSX.writeFile(wb, 'Submitted_Meters.xlsx');
-            showMessage('जमा किए गए मीटर्स की फ़ाइल डाउनलोड हो गई है!', 'info');
-        });
 
-    </script>
+<!-- Bootstrap JS CDN -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<!-- Separate JavaScript file -->
+<script src="script.js"></script>
 </body>
 </html>
