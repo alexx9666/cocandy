@@ -1,11 +1,10 @@
 // **NOTE: REPLACE THIS WITH YOUR DEPLOYED WEB APP URL (Execution URL) **
-const APP_URL = 'https://script.google.com/macros/s/AKfycbzEcqQuUg5TYSHwRPpd2wWh-sW74Rzfa1mELH22R-w3YrryjbvX0wZn4SoG1l0iC3m8Pw/exec'; 
+const APP_URL = 'https://script.google.com/macros/s/AKfycbyAHbCInDsODsBEV5vg9vq7_wpUaFpi6bLJ3kuMDesGufpIVvY0ahU6VoTtpQEIo2XN/exec; 
 
 let allData = []; 
 
 // ----------------------
-// 1. DATA SUBMISSION (UPLOAD) - Using Fetch for File Upload
-//    - Headers are NOT set here; the browser must set 'multipart/form-data'.
+// 1. DATA SUBMISSION (UPLOAD) - POST Request
 // ----------------------
 document.getElementById('meterDataForm').addEventListener('submit', function(e) {
     e.preventDefault();
@@ -14,16 +13,14 @@ document.getElementById('meterDataForm').addEventListener('submit', function(e) 
     statusDiv.innerHTML = '<span class="text-info">डेटा और इमेज अपलोड हो रहे हैं... कृपया प्रतीक्षा करें।</span>';
 
     const formData = new FormData(form);
-    formData.append('action', 'SUBMIT_DATA'); // Add action parameter
+    formData.append('action', 'SUBMIT_DATA');
 
     fetch(APP_URL, {
         method: 'POST',
-        // IMPORTANT: DO NOT set headers for FormData; the browser handles it.
-        body: formData, 
+        body: formData, // No headers set for FormData
     })
     .then(response => {
         if (!response.ok) {
-            // Log the error status if the network call succeeded but the API responded with an error status (e.g., 400 or 500)
             throw new Error(`HTTP error! status: ${response.status}`);
         }
         return response.json();
@@ -32,33 +29,31 @@ document.getElementById('meterDataForm').addEventListener('submit', function(e) 
         if (data.success) {
             statusDiv.innerHTML = `<span class="text-success">${data.message}</span>`;
             form.reset(); 
-            loadData(); // Reload table
+            loadData();
         } else {
-            // Handle error messages returned from Code.gs
             statusDiv.innerHTML = `<span class="text-danger">Upload Failed: ${data.message}</span>`;
         }
     })
     .catch(error => {
-        // Handle network/fetch errors (like Failed to fetch/CORS)
         console.error('Fetch Error:', error);
         statusDiv.innerHTML = `<span class="text-danger">Network or API Error: ${error.message || error}</span>`;
     });
 });
 
 // ----------------------
-// 2. DATA LOADING & RENDERING - Using Fetch (GET_DATA)
-//    - Headers are set to 'application/x-www-form-urlencoded' for simple POST data.
+// 2. DATA LOADING & RENDERING - GET Request (CORS Fix)
 // ----------------------
 function loadData() {
     const tableBody = document.getElementById('dataTableBody');
     tableBody.innerHTML = '<tr><td colspan="5" class="text-center text-info">डेटा लोड हो रहा है...</td></tr>';
     
-    // Call the API to get data
-    fetch(APP_URL, {
-        method: 'POST',
-        // IMPORTANT: Set this header for simple key-value pairs
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, 
-        body: 'action=GET_DATA' // Simple key-value pair string
+    // Create URL with action parameter
+    const url = new URL(APP_URL);
+    url.searchParams.append('action', 'GET_DATA'); 
+    
+    // Call the API using GET
+    fetch(url, {
+        method: 'GET', // IMPORTANT: Use GET for data retrieval
     })
     .then(response => {
         if (!response.ok) {
@@ -79,7 +74,7 @@ function loadData() {
     });
 }
 
-// Data rendering logic
+// Data rendering logic (No changes needed)
 function renderTable(data) {
     allData = data; 
     const tableBody = document.getElementById('dataTableBody');
@@ -93,7 +88,6 @@ function renderTable(data) {
     data.forEach(item => {
         const row = tableBody.insertRow();
         
-        // Ensure date is handled gracefully
         const dateValue = item.Timestamp;
         let date;
         if (typeof dateValue === 'object' && dateValue !== null && dateValue instanceof Date) {
@@ -121,7 +115,7 @@ function renderTable(data) {
 }
 
 // ----------------------
-// 3. SEARCH/FILTER FUNCTION
+// 3. SEARCH/FILTER FUNCTION (No changes needed)
 // ----------------------
 function filterTable() {
     const input = document.getElementById('searchInput').value.toLowerCase();
@@ -139,7 +133,7 @@ function filterTable() {
 }
 
 // ----------------------
-// 4. EDIT FUNCTIONALITY
+// 4. EDIT FUNCTIONALITY (Uses POST with JSON)
 // ----------------------
 function fillEditModal(data) {
     document.getElementById('editRowIndex').value = data.ROW_INDEX;
@@ -169,13 +163,12 @@ document.getElementById('editDataForm').addEventListener('submit', function(e) {
     
     // Prepare JSON payload for EDIT_DATA action
     const payload = {
-        action: 'EDIT_DATA', // Included for debugging/tracking
+        action: 'EDIT_DATA', 
         ...formData
     };
 
     fetch(APP_URL, {
         method: 'POST',
-        // IMPORTANT: Send as JSON for EDIT
         headers: { 'Content-Type': 'application/json' }, 
         body: JSON.stringify(payload),
     })
@@ -186,7 +179,6 @@ document.getElementById('editDataForm').addEventListener('submit', function(e) {
             loadData(); 
             // Close modal after a short delay
             setTimeout(() => {
-                // Ensure Bootstrap Modal instance is fetched correctly
                 const modal = bootstrap.Modal.getInstance(document.getElementById('editModal')) || new bootstrap.Modal(document.getElementById('editModal'));
                 modal.hide();
             }, 1500);
@@ -201,5 +193,4 @@ document.getElementById('editDataForm').addEventListener('submit', function(e) {
 });
 
 // Initialize the app
-
 window.onload = loadData;
