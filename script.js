@@ -201,4 +201,5 @@ document.getElementById('editDataForm').addEventListener('submit', function(e) {
 });
 
 // Initialize the app
+
 window.onload = loadData;
